@@ -1,4 +1,4 @@
-# Product Chatbot AI — GPT-6 Luna · Live Streamlit Demo
+# Product Chatbot AI — GPT-6 Luna · Live Streamlit Demo - https://shop-assist-ai.streamlit.app/ 
 
 A polished API-grounded shopping assistant with **live product retrieval, bounded LLM tool calling, product cards, follow-up conversations and layered demo safeguards**.
 
