@@ -4,6 +4,7 @@ import os
 import time
 import streamlit as st
 from agent import ProductPilotAgent, AgentError, MAX_HISTORY_TURNS, MODEL
+from catalog import ProductCatalog, CatalogError
 from security import SlidingLimit, verify_code, safe_catalog_image
 
 st.set_page_config(page_title="ProductPilot AI | Product Assistant", page_icon="🛍️", layout="wide",
@@ -71,7 +72,40 @@ def auth_gate():
     st.stop()
 
 
-def render_cards(products):
+@st.dialog("Product details")
+def show_product_details(product_id: int):
+    """Display API-grounded product information without leaving the chatbot."""
+    try:
+        item = ProductCatalog().get_product(product_id)["product"]
+    except (CatalogError, ValueError, TypeError):
+        st.error("Product details are temporarily unavailable. Please try again.")
+        return
+
+    st.subheader(item.get("title") or "Product")
+    st.caption(" · ".join(filter(None, [item.get("brand"), item.get("category"), f"Product #{item['id']}"])))
+    source = safe_catalog_image(item.get("thumbnail"))
+    if source:
+        st.image(source, use_container_width=True)
+
+    st.markdown(f"### ${item['price']:,.2f}")
+    rating = item.get("rating")
+    if rating is not None:
+        st.write(f"⭐ **{rating:.1f}/5** catalog rating")
+    st.write("**In stock**" if item.get("stock", 0) > 0 else "**Currently out of stock**")
+
+    if item.get("description"):
+        st.markdown("**About this product**")
+        st.write(item["description"])
+
+    st.markdown("**Buying information**")
+    for label, field in (("Warranty", "warrantyInformation"),
+                         ("Returns", "returnPolicy"),
+                         ("Shipping", "shippingInformation")):
+        st.write(f"**{label}:** {item.get(field) or 'Not provided in the catalog'}")
+    st.caption("Product information retrieved from the catalog API. Orders and checkout are not enabled.")
+
+
+def render_cards(products, key_scope="chat"):
     if not products:
         return
     with st.container():
@@ -92,16 +126,20 @@ def render_cards(products):
                     text = item.get("description")
                     if text:
                         st.caption(text[:125] + ("…" if len(text) > 125 else ""))
-                    st.link_button("Product details", f"https://dummyjson.com/products/{int(item['id'])}",
-                                   use_container_width=True)
+                    # Stay within ProductPilot rather than opening the raw API JSON endpoint.
+                    pid = item.get("id")
+                    if isinstance(pid, int) and not isinstance(pid, bool) and pid > 0:
+                        if st.button("Product details", key=f"details_{key_scope}_{i}_{pid}",
+                                     use_container_width=True):
+                            show_product_details(pid)
 
 
-def show_turn(turn):
+def show_turn(turn, turn_index):
     with st.chat_message("user", avatar="🧑"):
         st.write(turn["question"])
     with st.chat_message("assistant", avatar="🛍️"):
         st.write(turn["answer"])
-        render_cards(turn.get("products", []))
+        render_cards(turn.get("products", []), key_scope=f"chat_{turn_index}")
         trace = turn.get("trace", [])
         if trace:
             with st.expander("Tool activity", expanded=False):
@@ -155,8 +193,8 @@ if not st.session_state.turns:
             st.session_state.pending_prompt = text
             st.rerun()
 
-for turn in st.session_state.turns:
-    show_turn(turn)
+for turn_index, turn in enumerate(st.session_state.turns):
+    show_turn(turn, turn_index)
 
 question = st.chat_input("Ask about products, prices, ratings or warranty…", max_chars=500)
 if not question:
@@ -187,7 +225,7 @@ if question:
                             "llm_calls": result.llm_calls, "elapsed_s": result.elapsed_s}
                     st.session_state.turns.append(turn)
                     st.write(turn["answer"])
-                    render_cards(turn["products"])
+                    render_cards(turn["products"], key_scope=f"chat_{len(st.session_state.turns)-1}")
                     if result.trace:
                         with st.expander("Tool activity"):
                             st.json(result.trace, expanded=False)
