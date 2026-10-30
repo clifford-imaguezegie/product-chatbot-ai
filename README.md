@@ -1,22 +1,8 @@
-# Product Chatbot AI — GPT-6 Luna · Live Streamlit Demo
+# ProductPilot AI — GPT-6 Luna · Live Streamlit Demo
 
 A polished API-grounded shopping assistant with **live product retrieval, bounded LLM tool calling, product cards, follow-up conversations and layered demo safeguards**.
 
 **Stack:** Python · Streamlit · OpenRouter Responses API · GPT-6 Luna (low reasoning) · DummyJSON Products API.
-
-## 🚀 Live Demo
-
-**Try ProductPilot AI:** [Launch the live Streamlit application](https://shop-assist-ai.streamlit.app/)
-
-ProductPilot AI lets visitors explore conversational product discovery, API-grounded recommendations, product comparisons and contextual follow-up questions in a deployed customer-facing interface.
-
-### 🔐 Request Demo Access
-
-The live app is invitation-only to maintain a reliable demonstration experience and control usage of the AI service.
-
-**To request an access code:** Please contact the project owner privately via LinkedIn or through the freelance/professional platform where this project was shared.
-
-Access codes are shared privately with prospective clients and reviewers. No credentials are published in this repository.
 
 ## Features
 

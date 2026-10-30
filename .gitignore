@@ -1,12 +1,4 @@
-.streamlit/secrets.toml
-.env
-.env.*
-!.env.example
+# Your existing project .gitignore already ignores .env files.
+whatsapp_poc/.env
 __pycache__/
 .pytest_cache/
-*.pyc
-*.log
-.venv/
-venv/
-.ipynb_checkpoints/
-.DS_Store
